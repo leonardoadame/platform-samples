@@ -28,11 +28,7 @@ import os
 import sys
 
 # Threshold that defines a large file
-if len(sys.argv) > 1:
-    THRESHOLD_IN_MB = float(sys.argv[1]) / 1024
-else:
-    THRESHOLD_IN_MB = 0.5
-
+THRESHOLD_IN_MB = float(sys.argv[1]) / 1024 if len(sys.argv) > 1 else 0.5
 CWD = os.getcwd()
 CHUNKSIZE = 1024
 MAX_TYPE_LEN = len("Type")
@@ -77,22 +73,15 @@ def add_file(ext, type, size_mb):
     if size_mb > THRESHOLD_IN_MB:
         result[ext]['count_large'] = result[ext]['count_large'] + 1
         result[ext]['size_large'] = result[ext]['size_large'] + size_mb
-    if not 'max' in result[ext] or size_mb > result[ext]['max']:
+    if 'max' not in result[ext] or size_mb > result[ext]['max']:
         result[ext]['max'] = size_mb
-    if not 'min' in result[ext] or size_mb < result[ext]['min']:
+    if 'min' not in result[ext] or size_mb < result[ext]['min']:
         result[ext]['min'] = size_mb
 
 def print_line(type, ext, share_large, count_large, count_all, size_all, min, max):
-    print('{}{}{}{}{}{}{}{}'.format(
-        type.ljust(3+MAX_TYPE_LEN),
-        ext.ljust(3+MAX_EXT_LEN),
-        str(share_large).rjust(10),
-        str(count_large).rjust(10),
-        str(count_all).rjust(10),
-        str(size_all).rjust(10),
-        str(min).rjust(10),
-        str(max).rjust(10)
-    ))
+    print(
+        f'{type.ljust(3 + MAX_TYPE_LEN)}{ext.ljust(3 + MAX_EXT_LEN)}{str(share_large).rjust(10)}{str(count_large).rjust(10)}{str(count_all).rjust(10)}{str(size_all).rjust(10)}{str(min).rjust(10)}{str(max).rjust(10)}'
+    )
 
 for root, dirs, files in os.walk(CWD):
     for basename in files:
@@ -100,15 +89,12 @@ for root, dirs, files in os.walk(CWD):
         try:
             size_mb = float(os.path.getsize(filename)) / 1024 / 1024
             if not filename.startswith(os.path.join(CWD, '.git')) and size_mb > 0:
-                if is_binary(filename):
-                    file_type = "binary"
-                else:
-                    file_type = "text"
+                file_type = "binary" if is_binary(filename) else "text"
                 ext = os.path.basename(filename)
                 add_file('*', 'all', size_mb)
                 if ext.find('.') == -1:
                     # files w/o extension
-                    add_file(ext, file_type + " w/o ext", size_mb)
+                    add_file(ext, f"{file_type} w/o ext", size_mb)
                 else:
                     while ext.find('.') >= 0:
                         ext = ext[ext.find('.')+1:]
@@ -128,17 +114,17 @@ for ext in sorted(result, key=lambda x: (result[x]['type'], -result[x]['size_lar
         print_line(
             result[ext]['type'],
             ext,
-            str(round(large_share)) + ' %',
+            f'{str(round(large_share))} %',
             result[ext]['count_large'],
             result[ext]['count_all'],
             int(result[ext]['size_all']),
             int(result[ext]['min']),
-            int(result[ext]['max'])
+            int(result[ext]['max']),
         )
 
 print("\nAdd to .gitattributes:\n")
 for ext in sorted(result, key=lambda x: (result[x]['type'], x)):
     if len(ext) > 0 and result[ext]['type'] == "binary" and result[ext]['count_large'] > 0:
-        print('*.{} filter=lfs diff=lfs merge=lfs -text'.format(
-            "".join("[" + c.upper() + c.lower() + "]" if (('a' <= c <= 'z') or ('A' <= c <= 'Z')) else c for c in ext)
-        ))
+        print(
+            f"""*.{"".join(f"[{c.upper()}{c.lower()}]" if 'a' <= c <= 'z' or 'A' <= c <= 'Z' else c for c in ext)} filter=lfs diff=lfs merge=lfs -text"""
+        )

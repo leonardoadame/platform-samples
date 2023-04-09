@@ -49,9 +49,12 @@ if __name__ == '__main__':
     action = payload['action']
     repo = payload['repository']['full_name']
     if action == 'deleted':
-        create_github_issue('%s was deleted' % repo, 'Seems we\'ve got ourselves a bit of an issue here.\n\n@<user>',
-                            ['deleted'])
+        create_github_issue(
+            f'{repo} was deleted',
+            'Seems we\'ve got ourselves a bit of an issue here.\n\n@<user>',
+            ['deleted'],
+        )
 
-    outfile = '/tmp/webhook-{}.log'.format(repo)
+    outfile = f'/tmp/webhook-{repo}.log'
     with open(outfile, 'w') as f:
         f.write(json.dumps(payload))
