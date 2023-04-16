@@ -9,5 +9,5 @@ app = Flask(__name__)
 
 @app.route("/payload", methods=['POST'])
 def payload():
-    print('I got some JSON: {}'.format(request.json))
+    print(f'I got some JSON: {request.json}')
     return 'ok'

@@ -34,7 +34,7 @@ def index():
     hooks = config.get('hooks_path', join(path, 'hooks'))
     # Allow Github IPs only
     if config.get('github_ips_only', True):
-        src_ip = ip_address(u'{}'.format(request.remote_addr))
+        src_ip = ip_address(f'{request.remote_addr}')
         whitelist = requests.get('https://api.github.com/meta').json()['hooks']
         for valid_ip in whitelist:
             if src_ip in ip_network(valid_ip):
@@ -42,9 +42,7 @@ def index():
             else:
                 abort(403, "Unable to validate source IP")
 
-    # Enforce secret, so not just anybody can trigger these hooks
-    secret = config.get('enforce_secret', '')
-    if secret:
+    if secret := config.get('enforce_secret', ''):
         # Only SHA1 is supported
         header_signature = request.headers.get('X-Hub-Signature')
         if header_signature is None:
@@ -61,12 +59,8 @@ def index():
         if hexversion >= 0x020707F0:
             if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
                 abort(403)
-        else:
-            # What compare_digest provides is protection against timing
-            # attacks; we can live without this protection for a web-based
-            # application
-            if not str(mac.hexdigest()) == str(signature):
-                abort(403)
+        elif str(mac.hexdigest()) != str(signature):
+            abort(403)
 
     # Implement ping
     event = request.headers.get('X-GitHub-Event', 'ping')
@@ -114,10 +108,10 @@ def index():
         'branch': branch,
         'event': event
     }
-    logging.info('Metadata:\n{}'.format(dumps(meta)))
+    logging.info(f'Metadata:\n{dumps(meta)}')
     # Skip push-delete
     if event == 'push' and payload['deleted']:
-        logging.info('Skipping push-delete event for {}'.format(dumps(meta)))
+        logging.info(f'Skipping push-delete event for {dumps(meta)}')
         return dumps({'status': 'skipped'})
 
     # Possible hooks
@@ -126,9 +120,7 @@ def index():
         scripts.append(join(hooks, '{event}-{name}-{branch}'.format(**meta)))
     if name:
         scripts.append(join(hooks, '{event}-{name}'.format(**meta)))
-    scripts.append(join(hooks, '{event}'.format(**meta)))
-    scripts.append(join(hooks, 'all'))
-
+    scripts.extend((join(hooks, '{event}'.format(**meta)), join(hooks, 'all')))
     # Check permissions
     scripts = [s for s in scripts if isfile(s) and access(s, X_OK)]
     if not scripts:
@@ -154,9 +146,7 @@ def index():
         }
         # Log errors if a hook failed
         if proc.returncode != 0:
-            logging.error('{} : {} \n{}'.format(
-                s, proc.returncode, stderr
-            ))
+            logging.error(f'{s} : {proc.returncode} \n{stderr}')
 
     # Remove temporal file
     remove(tmpfile)
