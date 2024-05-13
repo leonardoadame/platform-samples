@@ -44,20 +44,20 @@ GEM
     octokit (4.7.0)
       sawyer (~> 0.8.0, >= 0.5.3)
     public_suffix (5.0.1)
-    rack (2.2.6.2)
-    rack-protection (2.2.3)
+    rack (2.2.9)
+    rack-protection (2.2.4)
       rack
     ruby2_keywords (0.0.5)
     sawyer (0.8.2)
       addressable (>= 2.3.5)
       faraday (> 0.8, < 2.0)
-    sinatra (2.2.3)
+    sinatra (2.2.4)
       mustermann (~> 2.0)
       rack (~> 2.2)
-      rack-protection (= 2.2.3)
+      rack-protection (= 2.2.4)
       tilt (~> 2.0)
     thread_safe (0.3.6)
-    tilt (2.1.0)
+    tilt (2.3.0)
     tzinfo (1.2.11)
       thread_safe (~> 0.1)
     zeitwerk (2.6.6)
@@ -70,7 +70,7 @@ DEPENDENCIES
   json (~> 2.3)
   jwt
   octokit
-  sinatra (~> 2.2.3)
+  sinatra (~> 2.2.4)
 
 BUNDLED WITH
-   1.17.1
+   1.17.3
